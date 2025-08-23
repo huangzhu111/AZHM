@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿兹海默症记忆训练系统</title>
+    <meta name="description" content="专为阿兹海默症患者设计的记忆训练系统，包含定向练习、新闻回顾、记忆游戏、照片回忆等功能">
+    <meta name="keywords" content="阿兹海默症,记忆训练,认知训练,老年人,记忆游戏">
+    <meta name="author" content="记忆训练系统">
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部导航 -->
+        <header class="header">
+            <h1><i class="fas fa-brain"></i> 记忆训练系统</h1>
+        </header>
+
+        <!-- 主导航菜单 -->
+        <nav class="main-nav" id="main-nav">
+            <button class="nav-btn" onclick="showSection('orientation')">
+                <i class="fas fa-compass"></i>
+                <span>定向练习</span>
+            </button>
+            <button class="nav-btn" onclick="showSection('memory-games')">
+                <i class="fas fa-gamepad"></i>
+                <span>记忆训练</span>
+            </button>
+            <button class="nav-btn" onclick="showSection('summary')">
+                <i class="fas fa-chart-line"></i>
+                <span>今日总结</span>
+            </button>
+            <button class="nav-btn caregiver-btn" onclick="showSection('caregiver')">
+                <i class="fas fa-user-md"></i>
+                <span>照护者界面</span>
+            </button>
+        </nav>
+
+        <!-- 定向练习模块 -->
+        <section id="orientation" class="content-section">
+            <h2>定向练习</h2>
+            <div class="orientation-grid">
+                <div class="orientation-card">
+                    <h3>今天是几月几日？星期几？</h3>
+                    <div class="question-input">
+                        <div class="date-inputs">
+                            <input type="number" id="year-part" placeholder="年份" min="2020" max="2030">
+                            <input type="number" id="month-part" placeholder="月" min="1" max="12">
+                            <input type="number" id="day-part" placeholder="日" min="1" max="31">
+                            <select id="weekday-part">
+                                <option value="">选择星期</option>
+                                <option value="0">星期日</option>
+                                <option value="1">星期一</option>
+                                <option value="2">星期二</option>
+                                <option value="3">星期三</option>
+                                <option value="4">星期四</option>
+                                <option value="5">星期五</option>
+                                <option value="6">星期六</option>
+                            </select>
+                        </div>
+                        <button onclick="submitDateAnswer()">提交答案</button>
+                    </div>
+                    <div id="date-feedback" class="feedback-message"></div>
+                </div>
+                <div class="orientation-card">
+                    <h3>我现在身处哪个城市？</h3>
+                    <div class="question-input">
+                        <input type="text" id="city-input" placeholder="例如：北京">
+                        <button onclick="submitCityAnswer()">提交答案</button>
+                    </div>
+                    <div id="city-feedback" class="feedback-message"></div>
+                </div>
+                <div class="orientation-card">
+                    <h3>现在是白昼还是黑夜？</h3>
+                    <div class="question-choice">
+                        <label class="choice-option">
+                            <input type="radio" name="daynight" value="day">
+                            <span>☀️ 白昼</span>
+                        </label>
+                        <label class="choice-option">
+                            <input type="radio" name="daynight" value="night">
+                            <span>🌙 黑夜</span>
+                        </label>
+                        <button onclick="submitDayNightAnswer()">提交答案</button>
+                    </div>
+                    <div id="daynight-feedback" class="feedback-message"></div>
+                </div>
+            </div>
+            <div class="orientation-score">
+                <h3>练习得分</h3>
+                <div id="orientation-total-score">总分：<span id="score-display">0</span>/3</div>
+                <button onclick="resetOrientationExercise()" class="reset-btn">重新开始</button>
+            </div>
+        </section>
+
+
+        <!-- 记忆训练游戏模块 -->
+        <section id="memory-games" class="content-section hidden">
+            <h2>记忆训练游戏</h2>
+            <div class="games-menu">
+                <button class="game-btn" onclick="startGame('number-sequence')">
+                    <i class="fas fa-sort-numeric-up"></i>
+                    数字序列复述
+                </button>
+                <button class="game-btn" onclick="startGame('word-recall')">
+                    <i class="fas fa-spell-check"></i>
+                    词语回忆
+                </button>
+                <button class="game-btn" onclick="startGame('picture-matching')">
+                    <i class="fas fa-images"></i>
+                    图片配对
+                </button>
+                <button class="game-btn" onclick="startGame('categorization')">
+                    <i class="fas fa-layer-group"></i>
+                    分类游戏
+                </button>
+                <button class="game-btn" onclick="startGame('sudoku')">
+                    <i class="fas fa-th"></i>
+                    数独游戏
+                </button>
+            </div>
+            
+            <!-- 游戏区域 -->
+            <div id="game-area" class="game-area hidden">
+                <div id="game-content"></div>
+                <div id="game-controls"></div>
+                <div id="game-score"></div>
+            </div>
+        </section>
+
+
+        <!-- 今日总结模块 -->
+        <section id="summary" class="content-section hidden">
+            <h2>今日训练总结</h2>
+            <div class="summary-container">
+                <div class="training-overview">
+                    <h3>训练完成情况</h3>
+                    <div id="training-progress"></div>
+                </div>
+                
+                <div class="detailed-scores">
+                    <h3>详细得分</h3>
+                    <div id="detailed-score-breakdown"></div>
+                </div>
+                
+                <div class="performance-analysis">
+                    <h3>表现分析</h3>
+                    <div id="performance-summary"></div>
+                </div>
+                
+                
+                <div class="feedback-section">
+                    <h3>今天的感受</h3>
+                    <div class="detailed-feedback">
+                        <div class="feedback-questions">
+                            <div class="feedback-question">
+                                <label>今天的训练难度如何？</label>
+                                <div class="rating-buttons">
+                                    <button class="rating-btn" onclick="setRating('difficulty', 1)">太简单</button>
+                                    <button class="rating-btn" onclick="setRating('difficulty', 2)">刚好</button>
+                                    <button class="rating-btn" onclick="setRating('difficulty', 3)">有点难</button>
+                                    <button class="rating-btn" onclick="setRating('difficulty', 4)">很困难</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-feedback">
+                            <label for="daily-feedback">还有想说的么？</label>
+                            <textarea id="daily-feedback" placeholder="请分享您今天的感受、遇到的困难或建议..."></textarea>
+                        </div>
+                        
+                        <div class="feedback-actions">
+                            <button onclick="saveDailyFeedback()" class="save-feedback-btn">保存今日反馈</button>
+                            <button onclick="generateSummaryReport()" class="generate-report-btn">生成总结报告</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 照护者界面 -->
+        <section id="caregiver" class="content-section hidden">
+            <h2>照护者管理界面</h2>
+            <div class="caregiver-tabs">
+                <button class="tab-btn active" onclick="showTab('settings')">设置</button>
+                <button class="tab-btn" onclick="showTab('progress')">进度报告</button>
+                <button class="tab-btn" onclick="showTab('data')">数据导出</button>
+            </div>
+            
+            <div id="settings-tab" class="tab-content">
+                <h3>训练设置</h3>
+                <div class="setting-group">
+                    <label>难度级别：</label>
+                    <select id="difficulty-level">
+                        <option value="easy">简单</option>
+                        <option value="medium" selected>中等</option>
+                        <option value="hard">困难</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>字体大小：</label>
+                    <select id="font-size">
+                        <option value="small">小</option>
+                        <option value="medium" selected>中</option>
+                        <option value="large">大</option>
+                    </select>
+                </div>
+                <button onclick="saveSettings()">保存设置</button>
+            </div>
+            
+            <div id="progress-tab" class="tab-content hidden">
+                <h3>训练进度报告</h3>
+                <div id="progress-charts"></div>
+            </div>
+            
+            <div id="data-tab" class="tab-content hidden">
+                <h3>数据导出</h3>
+                <button onclick="exportData('pdf')">导出PDF报告</button>
+                <button onclick="exportData('excel')">导出Excel数据</button>
+                <button onclick="clearData()">清除所有数据</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- 加载脚本 -->
+    <script src="scripts/storage.js"></script>
+    <script src="scripts/weather.js"></script>
+    <script src="scripts/news.js"></script>
+    <script src="scripts/games.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
